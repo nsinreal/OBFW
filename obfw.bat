@@ -9,10 +9,24 @@
 ::* License: CC-BY-SA 3.0
 
 if "%1"=="" exit /b
-set obfw.label=%1
-set "obfw.label=:%obfw.label::=%"
-shift 
-call %obfw.label% %1 %2 %3 %4 %5 %6 %7 %8 %9
+call :ParseArguments %*
+exit /b
+
+:ParseArguments
+	REM First argument - label/method
+	set obfw.label=%1
+	set "obfw.label=:%obfw.label::=%"
+
+	REM All other arguments - method arguments
+	set "obfw.args=%2"
+	:ParseLoop
+	shift
+	if not "%2"=="" (
+		call set "obfw.args=%obfw.args% %2"
+		goto ParseLoop
+		)
+
+	call %obfw.label% %obfw.args%
 exit /b
 
 :: ===========================================================================
@@ -53,6 +67,121 @@ exit /b
 	)
 	
 	call set "%1=%%AddSpacesNum.varFst:~-%AddSpacesNum.size%%%"
+exit /b
+
+:: %1 - symbol
+:checkIsDigit
+	set checkIsDigit.Digit=false
+	for /L %%i in (0,1,9) do if "%%i"=="%1" set checkIsDigit.Digit=true
+exit /b
+
+:: %1 - variableName %2 - symbol
+:addStrIfDigit
+	call :checkIsDigit %2
+	if "%checkIsDigit.Digit%"=="true" call set "%1=%%%1%%%2"
+exit /b
+
+:: Args: %1 - variableName
+:makeDigitsOnly
+	set "makeDigitsOnly.Str="
+	:makeDigitsOnlyLoop
+		call :addStrIfDigit makeDigitsOnly.Str %%%1:~0,1%%
+		call set "%1=%%%1:~1%%"
+		call set "makeDigitsOnly.Temp=%%%1%%"
+		if not "%makeDigitsOnly.Temp%"=="" goto makeDigitsOnlyLoop
+	set %1=%makeDigitsOnly.Str%
+exit /b
+
+:: Args: %1 - variableName, %2 - Find, %3 Replace
+:replace
+	call set %1=%%%1:%2=%3%%
+exit /b
+
+:: Args: %1 - variableName
+:makeLowerCase
+	set "makeLowerCase.Alph.upper=QWERTYUIOPASDFGHJKLZXCVBNM"
+	set "makeLowerCase.Alph.lower=qwertyuiopasdfghjklzxcvbnm"
+	for /L %%i in (0,1,25) do call :replace %1 %%makeLowerCase.Alph.upper:~%%i,1%% %%makeLowerCase.Alph.lower:~%%i,1%%
+exit /b
+
+:: Args: %1 - variableName
+:makeUpperCase
+	set "makeUpperCase.Alph.upper=QWERTYUIOPASDFGHJKLZXCVBNM"
+	set "makeUpperCase.Alph.lower=qwertyuiopasdfghjklzxcvbnm"
+	for /L %%i in (0,1,25) do call :replace %1 %%makeUpperCase.Alph.lower:~%%i,1%% %%makeUpperCase.Alph.upper:~%%i,1%%
+exit /b
+
+:: Args: %1 - variableName
+:deleteDoubleLetter
+	set "deleteDoubleLetter.Alph.upper=QWERTYUIOPASDFGHJKLZXCVBNM"
+	set "deleteDoubleLetter.Alph.lower=qwertyuiopasdfghjklzxcvbnm"
+	for /L %%i in (0,1,25) do call :replace %1 %%deleteDoubleLetter.Alph.lower:~%%i,1%%%%deleteDoubleLetter.Alph.lower:~%%i,1%% %%deleteDoubleLetter.Alph.lower:~%%i,1%%
+	for /L %%i in (0,1,25) do call :replace %1 %%deleteDoubleLetter.Alph.upper:~%%i,1%%%%deleteDoubleLetter.Alph.upper:~%%i,1%% %%deleteDoubleLetter.Alph.upper:~%%i,1%%
+exit /b
+
+:DeleteSpaces
+	call set DeleteSpaces.Str.Value.Init=%%%1%%
+	call set DeleteSpaces.Str.Value=%%%1:     =%%
+	call set DeleteSpaces.Str.Value=%%%1:    =%%
+	call set DeleteSpaces.Str.Value=%%%1:   =%%
+	call set DeleteSpaces.Str.Value=%%%1:  =%%
+	call set DeleteSpaces.Str.Value=%%%1: =%%
+	set %1=%DeleteSpaces.Str.Value%
+	if not "%DeleteSpaces.Str.Value.Init%"=="%DeleteSpaces.Str.Value%" goto DeleteSpaces %1
+exit /b
+
+:: Args: %1 - variableName
+:deleteDoubleSpaces
+	call set deleteDoubleSpaces.Str.Value.Init=%%%1%%
+	call set deleteDoubleSpaces.Str.Value=%%%1:     = %%
+	call set deleteDoubleSpaces.Str.Value=%%%1:    = %%
+	call set deleteDoubleSpaces.Str.Value=%%%1:   = %%
+	call set deleteDoubleSpaces.Str.Value=%%%1:  = %%
+	set %1=%deleteDoubleSpaces.Str.Value%
+	if not "%deleteDoubleSpaces.Str.Value.Init%"=="%deleteDoubleSpaces.Str.Value%" goto deleteDoubleSpaces %1
+exit /b
+
+:: Args: %1 - variableName
+:deletePunctuationMarks
+	call set %1=%%%1:;= %%
+	call set %1=%%%1::= %%
+	call set %1=%%%1:(= %%
+	call set %1=%%%1:)= %%
+	call set %1=%%%1:?= %%
+	call set %1=%%%1:!= %%
+	call set %1=%%%1:,= %%
+	call set %1=%%%1:.= %%
+exit /b
+
+:: Firstly delete punctuanion marks, double spaces & double letters
+:: Args: %1 - input variableName, %2 - variableName, %3 word
+:FindWord
+	:: Add spaces in start & end
+	call set "%1= %%%1%% "
+
+	call set "FindWord.Str=%%%1%%"
+	call set "FindWord.Replaced=%%%1: %3 =%%"
+
+	:: Delete added spaces
+	call set "%1=%%%1:~1%%"
+	call set "%1=%%%1:~0,-1%%"
+
+	if not "%FindWord.Str%"=="%FindWord.Replaced%" set %2=True
+exit /b
+
+:: Firstly delete punctuanion marks, double spaces & double letters
+:: Args: %1 - input variableName, %2 - variableName, %3, %4, ... - words
+:FindWords
+	set FindWords.input.variableName=%1
+	set FindWords.variableName=%2
+	set "%2=No results"
+	:FindWordsLoop
+		call set FindWords.variableName.value=%%%2%%
+		if not "%FindWords.variableName.value%"=="False" if not "%3"=="" (
+			call :FindWord %FindWords.input.variableName% %FindWords.variableName% %3
+			shift
+			goto FindWordsLoop
+		)
 exit /b
 
 :: ===========================================================================

@@ -10,7 +10,7 @@ goto Init
 ::* XMPP: xmpp://nsinreal@jabber.ru
 ::* License: CC-BY-SA 3.0
 
-:: WARNING: there are 30 real "goto" commands
+:: WARNING: there are 46 real "goto" commands
 :: This source can damage your mental health.
 
 :: ===========================================================================
@@ -65,7 +65,7 @@ exit /b
 	echo   o [yx] - Open Cell yx
 	echo   f [yx] - Create Flag on Cell yx
 	echo   h      - Output this help.
-	IF EXIST records.log echo   r      - Output all records
+	IF EXIST records.log echo   t      - Output top records
 	echo   n      - Start new game
 	echo   q      - Exit to Windows or console
 	echo.
@@ -155,8 +155,28 @@ exit /b
 	set Input=yes
 	set /p "Input=Want to start new game? "
 
-	set Input=%Input:~0,1%
-	if "%Input%"=="y" goto makeNewGame
+	call %obfw% :makeLowerCase Input
+	call %obfw% :deleteDoubleLetter Input
+	call %obfw% :deletePunctuationMarks Input
+	call %obfw% :deleteDoubleSpaces Input
+
+	:: Check first letter
+	if "%Input:~0,1%"=="y" goto makeNewGame
+    if "%Input:~0,1%"=="n" (
+		if not "%Input:~0,1%"=="new" (
+			if not "%Input:~0,1%"=="next" (
+				exit /b )))
+
+	:: Or check words
+	call %obfw% :FindWords Input Input.Action.Agree ye yes yea yeah yep yup ok okay okey sure new next more want wish like again play maybe course once
+	if "%Input.Action.Agree%"=="True" goto MakeNewGame
+
+	call %obfw% :FindWords Input Input.Action.Disagree no n't not nop nope bye don't stop nay nix never later late hate suck dislike leave quit exit
+	if "%Input.Action.Disagree%"=="True" goto exit /b
+
+	:: We can't say, what user typed
+	echo Sorry, but I can't understand your answer. Please rewrite it.
+	goto CheckUserWantNewGame
 exit /b
 
 :: Args: %1 - Field.Fake(x,y); %2 - Field.Real(x,y)
@@ -435,83 +455,127 @@ exit /b
 :: Game here
 :: ===========================================================================
 
-:InputCycle
-	:: User can just press enter and %Input% will be equal to last input 
-	:: (or to "" if this input is first). To fix it, we write fake input 0 00
-	set "Input=0 00"
-	set /p "Input=Input: "
-	:: Destroy double spaces
-	set "Input=%Input: =%"
-	set "Input.Action=%Input:~0,1%"
+:InputActionQuit
+	endlocal>nul
+	echo Good Bye!
+	exit /b
+exit /b
 
-	:: Leave the game
-	if "%Input.Action%"=="q" (
-		echo Good Bye.
-		exit /b
-	)
-	:: Or print help
-	if "%Input.Action%"=="h" (
-		cls
-		call :PrintTheHelp
+:InputActionPrintHelp
+	cls
+	call :PrintTheHelp
+	goto GameCycle
+exit /b
+
+:InputActionPrintRecords
+	if EXIST records.log (
+		call :printRecords false
 		goto GameCycle
+	) else (
+		goto errorIOCommand
 	)
-	:: Or print records
-	if "%Input.Action%"=="r" (
-		if EXIST records.log (
-			call :printRecords false
-			goto GameCycle
+exit /b
+
+:InputActionNewGame
+	endlocal>nul
+	goto Init
+exit /b
+
+:InputActionOpenCell
+	call :SecureOpenCell %Input.X% %Input.Y% %%Field.Real%Input.X%%Input.Y%%% %%Field.Fake%Input.X%%Input.Y%%%
+	goto GameCycle
+exit /b
+
+:InputActionFlagCell
+	call :FlagCell %Input.X% %Input.Y% %%Field.Fake%Input.X%%Input.Y%%%
+	goto GameCycle
+exit /b
+
+:InputDigitsToCoordinates
+	if not "%Input.Digits:~0,1%"=="" (
+			set "Input.X=%Input.Digits:~0,1%"
 		) else (
-			goto errorIOCommand
+			set "Input.X=0
 		)
-	)
-	:: Or make new game
-	if "%Input.Action%"=="n" (
-		endlocal>nul
-		goto Init
-	)
-
-	:: Magic is here
-	set Input.X=0
-	set Input.Y=0
-	for /L %%i in (1,1,9) do if "%%i"=="%Input:~0,1%" set Input.X=%%i
-	if %Input.X%==0 (
-		for /L %%i in (1,1,9) do if "%%i"=="%Input:~1,1%" set Input.X=%%i
-		for /L %%i in (1,1,9) do if "%%i"=="%Input:~2,1%" set Input.Y=%%i
+	if not "%Input.Digits:~1,1%"=="" (
+			set "Input.Y=%Input.Digits:~1,1%"
 		) else (
-		for /L %%i in (1,1,9) do if "%%i"=="%Input:~1,1%" set Input.Y=%%i
-		:: If user haven't writed Input.Action, but writed coordinates, open the cell
-		set Input.Action=o
-	)
+			set "Input.Y=0
+		)
+exit /b
 
-	:: User is idiot
-	:: This code seems like LISP.
-	if not "%Input.Action%"=="q" (
-		if not "%Input.Action%"=="h" (
-			if not "%Input.Action%"=="o" (
-				if not "%Input.Action%"=="f" (
-					if not "%Input.Action%"=="n" (
-						if not "%Input.Action%"=="r" (
-							goto errorIOCommand ))))))
+:InputCycle
+	:: User can just press enter and %Input% will be equal to last input
+	:: (or to "" if this input is first). To fix it, we write fake input 0 00
+	set "Input=# 00"
+	set /p "Input=Input: "
 
-	:: User is twice idiot
-	if "%Input.X%"=="0" (
-		goto errorIOCoordinates
-		goto GameCycle
-	)
-	if "%Input.Y%"=="0" (
-		goto errorIOCoordinates
-		goto GameCycle
-	)
+	:: Some formatting
+	call %obfw% :makeLowerCase Input
+	call %obfw% :deleteDoubleLetter Input
+	call %obfw% :deleteDoubleSpaces Input
 
-	if not "%Win%"=="1" call %obfw% :TimerNow MineSweeper
-	if "%Input.Action%"=="o" (
-			call :SecureOpenCell %Input.X% %Input.Y% %%Field.Real%Input.X%%Input.Y%%% %%Field.Fake%Input.X%%Input.Y%%%
-			goto GameCycle
-	)
-	if "%Input.Action%"=="f" (
-			call :FlagCell %Input.X% %Input.Y% %%Field.Fake%Input.X%%Input.Y%%%
-			goto GameCycle
-	)
+	:: Try to detect action by first letter
+	set "Input.Action=%Input:~0,1%"
+	if "%Input.Action%"=="#" goto errorIOCommand
+	if "%Input.Action%"=="q" goto InputActionQuit
+	if "%Input.Action%"=="h" goto InputActionPrintHelp
+	if "%Input.Action%"=="t" goto InputActionPrintRecords
+	if "%Input.Action%"=="n" goto InputActionNewGame
+
+	:: Try to get coordinates of point
+	set "Input.Digits=%Input%"
+	call %obfw% :makeDigitsOnly Input.Digits
+	set Input.X=-1
+	set Input.Y=-1
+	if not "%Input.Digits%"=="" call :InputDigitsToCoordinates
+	if not "%Input.X%"=="0" if not "%Input.Y%"=="0" goto InputCycleCoordinates
+	:: There are digit, but only one (or zero)
+	if not "%Input.Digits%"=="" goto errorIOCoordinates
+
+	:: Some formatting
+	call %obfw% :deletePunctuationMarks Input
+
+	:: Try to detect what user writted
+
+	call %obfw% :FindWords Input Input.Action.Quit shutdown leave quit exit escape bye
+	if "%Input.Action.Quit%"=="True" goto InputActionQuit
+
+	call %obfw% :FindWords Input Input.Action.PrintHelp help support ref reference command commands cmd
+	if "%Input.Action.PrintHelp%"=="True" goto InputActionPrintHelp
+
+	call %obfw% :FindWords Input Input.Action.PrintRecords top record records score scoring topscore best
+	if "%Input.Action.PrintRecords%"=="True" goto InputActionPrintRecords
+
+	call %obfw% :FindWords Input Input.Action.NewGame new restart
+	if "%Input.Action.NewGame%"=="True" goto InputActionNewGame
+
+	:: We can't detect what user want to do
+
+	goto ErrorIOCommand
+
+	:InputCycleCoordinates
+		:: Try to detect action by first letter
+		if "%Input.Action%"=="o" goto InputActionOpenCell
+		if "%Input.Action%"=="f" goto InputActionFlagCell
+		if "%Input.Action%"=="!" goto InputActionFlagCell
+		if "%Input.Action%"=="?" goto InputActionFlagCell
+
+		:: Some formatting
+		call %obfw% :deletePunctuationMarks Input
+
+		:: If there are digits only in user input, open cell (x,y)
+		set Input.NoSpaces=%Input%
+		call %obfw% :DeleteSpaces Input.NoSpaces
+		if "%Input.NoSpaces%"=="%Input.Digits%" goto InputActionOpenCell
+
+		:: Try to detect what user writted
+
+		call %obfw% :FindWords Input Input.Action.OpenCel open show
+		if "%Input.Action.OpenCel%"=="True" goto InputActionOpenCell
+
+		call %obfw% :FindWords Input Input.Action.FlagCell bomb flag mark
+		if "%Input.Action.FlagCell%"=="True" goto InputActionFlagCell
 exit /b
 
 :GameCycle
@@ -546,7 +610,7 @@ exit /b
 		set "Output.Line7=%Output.Line7%      n      - Start new game"
 		set "Output.Line8=%Output.Line8%      q      - Exit to Windows or console"
 		set "Output.Line9=%Output.Line9%      h      - Display this help."
-		set "Output.Line10=%Output.Line10%      r      - Display all records"
+		set "Output.Line10=%Output.Line10%      t      - Display all records"
 		)
 
 	:: Check win or fail
