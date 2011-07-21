@@ -91,13 +91,13 @@ exit /b
 
 	call %obfw% :AddSpacesStr Name 24
 	call %obfw% :AddSpacesNum GameStep 5
-	call %obfw% :AddSpacesNum Timer.DurationFormatted 12
+	call %obfw% :AddSpacesNum Timer.MineSweeper.DurationFormatted 12
 	call %obfw% :AddSpacesNum DateTime 22
 
 	if "%Marker%"=="!" if not "%LastMarker%"=="nop" (
 		echo   +--------------+-------+--------------------------+------------------------+ >>records.log 2>nul)
 
-	echo   ^| %Timer.DurationFormatted% ^| %GameStep% ^| %Name% ^| %DateTime% ^| >>records.log 2>nul
+	echo   ^| %Timer.MineSweeper.DurationFormatted% ^| %GameStep% ^| %Name% ^| %DateTime% ^| >>records.log 2>nul
 
 	set "LastMarker=%Marker%"
 	set /a Place+=1
@@ -384,7 +384,7 @@ exit /b
 	:: Increase GameStep
 	set /a GameStep+=1
 	:: Run timer at first gamestep
-	if "%GameStep%"=="1" call %obfw% :TimerStart
+	if "%GameStep%"=="1" call %obfw% :TimerStart MineSweeper
 
 	if not "%4"=="?" (
 		echo Cell x=%1 y=%2 already opened
@@ -503,7 +503,7 @@ exit /b
 		goto GameCycle
 	)
 
-	if not "%Win%"=="1" call %obfw% :TimerNow
+	if not "%Win%"=="1" call %obfw% :TimerNow MineSweeper
 	if "%Input.Action%"=="o" (
 			call :SecureOpenCell %Input.X% %Input.Y% %%Field.Real%Input.X%%Input.Y%%% %%Field.Fake%Input.X%%Input.Y%%%
 			goto GameCycle
@@ -532,8 +532,8 @@ exit /b
 		)
 
 	:: Run timer
-	if not "%Win%"=="1" call %obfw% :TimerNow
-	call set Output.Line1=%Output.Line1%      Time: %Timer.DurationFormatted%
+	if not "%Win%"=="1" call %obfw% :TimerNow MineSweeper
+	call set Output.Line1=%Output.Line1%      Time: %Timer.MineSweeper.DurationFormatted%
 
 	:: Print GameStep
 	set "Output.Line2=%Output.Line2%      GameStep: %GameStep%"
@@ -607,7 +607,7 @@ exit /b
 	set Win=0
 	set GameStep=0
 	:: Reset timer
-	set "Timer.Started="
+	call %obfw% :TimerReset MineSweeper
 
 	:: Try to create field
 	for /L %%x in (1,1,9) do for /L %%y in (1,1,9) do set Field.Fake%%x%%y=?

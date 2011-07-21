@@ -70,6 +70,7 @@ exit /b
 	for /L %%i IN (0,1,9) do call :ReplaceTimeDigit %1 %%i
 exit /b
 
+:: Args: %1 - variableName
 :ConvertTime
 	call set Timer.TempTime=%%%1%%
 	call :ReplaceTimeDigits Timer.TempTime
@@ -78,31 +79,10 @@ exit /b
 	set %1.Converted=1
 exit /b
 
-:TimerStart
-	set "Timer.Started=%Time%"
-	set Timer.Started.Converted=0
-exit /b
-
-:TimerNow
-	if "%Timer.Started%"=="" (
-		set "Timer.Duration=0"
-		set "Timer.DurationFormatted=00:00:00.00"
-		exit /b
-	)
-
-	set "Timer.Now=%Time%"
-	call :ReplaceTimeDigits Timer.Now
-
-	call :ConvertTime Timer.Now
-	if not "%Timer.Started.Converted%"=="1" call :ConvertTime Timer.Started
-
-	:: calculating the Timer.Duration is easy
-	set /A Timer.Duration=%Timer.Now%-%Timer.Started%
-
-	:: we might have measured the Time inbetween days
-	if %Timer.Now% LSS %Timer.Started% set /A Timer.Duration+=24*60*60*100
-
-	:: now break the centiseconds down to hors, minutes, seconds and the remaining centiseconds
+:: Args: %1 - centiseconds
+:ConvertCentiSeconds
+	:: break the centiseconds down to hours, minutes, seconds and the remaining centiseconds
+	call set /A Timer.Duration=%1
 	set /A Timer.DurationH=%Timer.Duration% / 360000 >nul
 	set /A Timer.DurationM=(%Timer.Duration% - %Timer.DurationH%*360000) / 6000 >nul
 	set /A Timer.DurationS=(%Timer.Duration% - %Timer.DurationH%*360000 - %Timer.DurationM%*6000) / 100 >nul
@@ -113,5 +93,55 @@ exit /b
 	if %Timer.DurationM% LSS 10 set Timer.DurationM=0%Timer.DurationM%
 	if %Timer.DurationS% LSS 10 set Timer.DurationS=0%Timer.DurationS%
 	if %Timer.DurationHS% LSS 10 set Timer.DurationHS=0%Timer.DurationHS%
+
 	set Timer.DurationFormatted=%Timer.DurationH%:%Timer.DurationM%:%Timer.DurationS%,%Timer.DurationHS%
+exit /b
+
+:: Args: %1 - timerID
+:TimerReset
+	set "Timer.%1.Started="
+	set "Timer.%1.Started.Converted="
+exit /b
+
+:: Args: %1 - timerID
+:TimerStart
+	set "Timer.%1.Started=%Time%"
+	set Timer.%1.Started.Converted=0
+exit /b
+
+:: Args: %1 - timerID
+:TimerNow
+	set Timer.TimerId=%1
+
+	:: Make Timer = Timer.%Timer.TimerId%
+	call set Timer.Started=%%Timer.%Timer.TimerId%.Started%%
+	call set Timer.Started.Converted=%%Timer.%Timer.TimerId%.Started.Converted%%
+
+	if "%Timer.Started%"=="" (
+		set "Timer.%Timer.TimerId%.Duration=0"
+		set "Timer.%Timer.TimerId%.DurationFormatted=00:00:00.00"
+		exit /b
+	)
+
+	set "Timer.%Timer.TimerId%.TimeNow=%Time%"
+	call :ReplaceTimeDigits Timer.%Timer.TimerId%.TimeNow
+
+	call :ConvertTime Timer.%Timer.TimerId%.TimeNow
+	if not "%Timer.Started.Converted%"=="1" call :ConvertTime Timer.%Timer.TimerId%.Started
+
+	:: Make Timer = Timer.%Timer.TimerId%. Again
+	call set Timer.TimeNow=%%Timer.%Timer.TimerId%.TimeNow%%
+	call set Timer.Started=%%Timer.%Timer.TimerId%.Started%%
+
+	:: calculating the Duration is easy
+	set /A Timer.Duration=%Timer.TimeNow%-%Timer.Started%
+
+	:: we might have measured the Time inbetween days
+	if %Timer.TimeNow% LSS %Timer.Started% set /A Timer.Duration+=24*60*60*100
+	
+	call :ConvertCentiSeconds %Timer.Duration%
+
+	:: Make Timer.%Timer.TimerId% = Timer
+	set Timer.%Timer.TimerId%.DurationFormatted=%Timer.DurationFormatted%
+	set Timer.%Timer.TimerId%.Duration=%Timer.Duration%
 exit /b
