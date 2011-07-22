@@ -334,8 +334,17 @@ exit /b
 	for /L %%x in (1,1,9) do for /L %%y in (1,1,9) do call :clearCell %%x %%y %%Field.Real%%x%%y%% Field.Real%%x%%y
 exit /b
 
-:CheckCellIsOpened
+:CheckCell
+	set NotOpenedBefore=0
 	if "%1"=="?" set NotOpenedBefore=1
+
+	set Field.Real.This=%2
+	call set Field.Real.Next=%%Field.Real%NextX%%NextY%%%
+
+	if %NotOpenedBefore%==1 (
+		if "%Field.Real.This%"=="0" call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+		if "%Field.Real.Next%"=="0" call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	)
 exit /b
 
 :OpenCell
@@ -347,56 +356,38 @@ exit /b
 	:: Open this cell
 	call set Field.Fake%1%2=%%Field.Real%1%2%%
 
-	:: If there are no bombs near, try to open automatically all nearest cells. Else - leave
-	if not "%3" == "0" exit /b
-
 	set /a NextX=%1
 	set /a NextY=%2 + 1
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1
 	set /a NextY=%2 - 1
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1 - 1
 	set /a NextY=%2
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1 + 1
 	set /a NextY=%2
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY%	%%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1 + 1
 	set /a NextY=%2 + 1
 	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%% %%Field.Real%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY%	%%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1 + 1
 	set /a NextY=%2 - 1
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%% %%Field.Real%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY%	%%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1 - 1
 	set /a NextY=%2 + 1
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%% %%Field.Real%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY%	%%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 
 	set /a NextX=%1 - 1
 	set /a NextY=%2 - 1
-	set NotOpenedBefore=0
-	call :CheckCellIsOpened %%Field.Fake%NextX%%NextY%%% %%Field.Real%NextX%%NextY%%%
-	if %NotOpenedBefore%==1 call :OpenCell %NextX% %NextY%	%%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+	call :CheckCell %%Field.Fake%NextX%%NextY%%% %3
 exit /b
 
 :: Args: %1, %2 - coordinates (x,y), %3 - cell content (real field) %4 - cell content (fake field)
