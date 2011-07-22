@@ -33,6 +33,21 @@ exit /b
 :: String procedurs
 :: ===========================================================================
 
+:: Args: %1 - string %2 variableName (for result)
+:GetLength
+	if "%1"=="" (
+		set %2=0
+		exit /b
+	)
+	set "GetLength.Str=%1"
+	set GetLength.Length=0
+	:GetLengthLoop
+		set GetLength.Str=%GetLength.Str:~0,-1%
+		set /a GetLength.Length+=1
+		if not "%GetLength.Str%"=="" goto GetLengthLoop
+	set %2=%GetLength.Length%
+exit /b
+
 :: Makes string length equal to %2. This method will add spaces in end
 :: Args: %1 - variableName, %2 - size
 :AddSpacesStr
