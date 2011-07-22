@@ -108,7 +108,7 @@ exit /b
 	set /a Place = 0
 	move /y records.log records.b.log>nul 2>nul
 	FOR /F "tokens=1,2,3,4,5,6 delims=^| " %%a in (records.b.log) do (
-		set "Timer.DurationFormatted=%%a"
+		set "Timer.MineSweeper.DurationFormatted=%%a"
 		set "GameStep=%%b"
 		set "Name=%%c"
 		set "DateTime=%%d %%e"
