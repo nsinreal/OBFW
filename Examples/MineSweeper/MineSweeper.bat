@@ -518,8 +518,8 @@ exit /b
 	:: Try to get coordinates of point
 	set "Input.Digits=%Input%"
 	call %obfw% :makeDigitsOnly Input.Digits
-	set Input.X=-1
-	set Input.Y=-1
+	set Input.X=0
+	set Input.Y=0
 	if not "%Input.Digits%"=="" call :InputDigitsToCoordinates
 	if not "%Input.X%"=="0" if not "%Input.Y%"=="0" goto InputCycleCoordinates
 	:: There are digit, but only one (or zero)
