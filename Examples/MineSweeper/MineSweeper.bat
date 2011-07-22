@@ -510,11 +510,6 @@ exit /b
 	set "Input=# 00"
 	set /p "Input=Input: "
 
-	:: Some formatting
-	call %obfw% :makeLowerCase Input
-	call %obfw% :deleteDoubleLetter Input
-	call %obfw% :deleteDoubleSpaces Input
-
 	:: Try to detect action by first letter
 	set "Input.Action=%Input:~0,1%"
 	if "%Input.Action%"=="#" goto errorIOCommand
@@ -534,6 +529,9 @@ exit /b
 	if not "%Input.Digits%"=="" goto errorIOCoordinates
 
 	:: Some formatting
+	call %obfw% :makeLowerCase Input
+	call %obfw% :deleteDoubleLetter Input
+	call %obfw% :deleteDoubleSpaces Input
 	call %obfw% :deletePunctuationMarks Input
 
 	:: Try to detect what user writted
@@ -551,7 +549,6 @@ exit /b
 	if "%Input.Action.NewGame%"=="True" goto InputActionNewGame
 
 	:: We can't detect what user want to do
-
 	goto ErrorIOCommand
 
 	:InputCycleCoordinates
@@ -562,12 +559,18 @@ exit /b
 		if "%Input.Action%"=="?" goto InputActionFlagCell
 
 		:: Some formatting
+		call %obfw% :makeLowerCase Input
+		call %obfw% :deleteDoubleLetter Input
+		call %obfw% :deleteDoubleSpaces Input
 		call %obfw% :deletePunctuationMarks Input
 
 		:: If there are digits only in user input, open cell (x,y)
 		set Input.NoSpaces=%Input%
 		call %obfw% :DeleteSpaces Input.NoSpaces
 		if "%Input.NoSpaces%"=="%Input.Digits%" goto InputActionOpenCell
+
+		:: Delete digits
+		call %obfw% :deleteDigits Input
 
 		:: Try to detect what user writted
 
@@ -576,6 +579,9 @@ exit /b
 
 		call %obfw% :FindWords Input Input.Action.FlagCell bomb flag mark
 		if "%Input.Action.FlagCell%"=="True" goto InputActionFlagCell
+
+		:: We can't detect what user want to do
+		goto ErrorIOCommand
 exit /b
 
 :GameCycle
