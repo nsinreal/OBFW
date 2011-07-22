@@ -339,11 +339,11 @@ exit /b
 	if "%1"=="?" set NotOpenedBefore=1
 
 	set Field.Real.This=%2
-	call set Field.Real.Next=%%Field.Real%NextX%%NextY%%%
+	REM call set Field.Real.Next=%%Field.Real%NextX%%NextY%%%
 
 	if %NotOpenedBefore%==1 (
 		if "%Field.Real.This%"=="0" call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
-		if "%Field.Real.Next%"=="0" call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
+		REM if "%Field.Real.Next%"=="0" call :OpenCell %NextX% %NextY% %%Field.Real%NextX%%NextY%%% %%Field.Fake%NextX%%NextY%%%
 	)
 exit /b
 
