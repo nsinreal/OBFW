@@ -394,8 +394,6 @@ exit /b
 :SecureOpenCell
 	:: Increase GameStep
 	set /a GameStep+=1
-	:: Run timer at first gamestep
-	if "%GameStep%"=="1" call %obfw% :TimerStart MineSweeper
 
 	if not "%4"=="?" (
 		echo Cell x=%1 y=%2 already opened
@@ -496,10 +494,16 @@ exit /b
 exit /b
 
 :InputCycle
+	:: Start timer before input
+	if not "%GameStep%"=="0" call %obfw% :TimerStart MineSweeper
+
 	:: User can just press enter and %Input% will be equal to last input
 	:: (or to "" if this input is first). To fix it, we write fake input 0 00
 	set "Input=# 00"
 	set /p "Input=Input: "
+
+	:: Pause timer after input
+	call %obfw% :TimerPause Minesweeper
 
 	:: Try to detect action by first letter
 	set "Input.Action=%Input:~0,1%"

@@ -264,12 +264,21 @@ exit /b
 :TimerReset
 	set "Timer.%1.Started="
 	set "Timer.%1.Started.Converted="
+	set "Timer.%1.Duration="
+	set "Timer.%1.Paused="
 exit /b
 
 :: Args: %1 - timerID
 :TimerStart
 	set "Timer.%1.Started=%Time%"
-	set Timer.%1.Started.Converted=0
+	set "Timer.%1.Started.Converted=0"
+	set "Timer.%1.Paused=0"
+exit /b
+
+:: Args: %1 - timerID
+:TimerPause
+	call :TimerNow %1
+	set "Timer.%1.Paused=1"
 exit /b
 
 :: Args: %1 - timerID
@@ -279,6 +288,10 @@ exit /b
 	:: Make Timer = Timer.%Timer.TimerId%
 	call set Timer.Started=%%Timer.%Timer.TimerId%.Started%%
 	call set Timer.Started.Converted=%%Timer.%Timer.TimerId%.Started.Converted%%
+	call set Timer.Duration=%%Timer.%Timer.TimerId%.Duration%%
+	call set Timer.Paused=%%Timer.%Timer.TimerId%.Paused%%
+
+	if "%Timer.Paused%"=="1" exit /b
 
 	if "%Timer.Started%"=="" (
 		set "Timer.%Timer.TimerId%.Duration=0"
@@ -297,7 +310,7 @@ exit /b
 	call set Timer.Started=%%Timer.%Timer.TimerId%.Started%%
 
 	:: calculating the Duration is easy
-	set /A Timer.Duration=%Timer.TimeNow%-%Timer.Started%
+	set /A Timer.Duration=%Timer.Duration%+%Timer.TimeNow%-%Timer.Started%
 
 	:: we might have measured the Time inbetween days
 	if %Timer.TimeNow% LSS %Timer.Started% set /A Timer.Duration+=24*60*60*100
