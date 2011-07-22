@@ -501,13 +501,15 @@ exit /b
 	:: (or to "" if this input is first). To fix it, we write fake input 0 00
 	set "Input=# 00"
 	set /p "Input=Input: "
-
+	
 	:: Pause timer after input
 	call %obfw% :TimerPause Minesweeper
+	
+	:: If there no input, just redraw field
+	if "%Input%"=="# 00" goto gameCycle
 
 	:: Try to detect action by first letter
 	set "Input.Action=%Input:~0,1%"
-	if "%Input.Action%"=="#" goto errorIOCommand
 	if "%Input.Action%"=="q" goto InputActionQuit
 	if "%Input.Action%"=="h" goto InputActionPrintHelp
 	if "%Input.Action%"=="t" goto InputActionPrintRecords
