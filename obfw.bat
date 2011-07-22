@@ -1,5 +1,3 @@
-@echo off
-
 ::* Project Name: Open Batch FrameWork
 
 ::* Author: nsinreal
@@ -137,11 +135,12 @@ exit /b
 :: Args: %1 - variableName
 :DeleteSpaces
 	call set DeleteSpaces.Str.Value.Init=%%%1%%
-	call set DeleteSpaces.Str.Value=%%%1:     =%%
-	call set DeleteSpaces.Str.Value=%%%1:    =%%
-	call set DeleteSpaces.Str.Value=%%%1:   =%%
-	call set DeleteSpaces.Str.Value=%%%1:  =%%
-	call set DeleteSpaces.Str.Value=%%%1: =%%
+	set DeleteSpaces.Str.Value=%DeleteSpaces.Str.Value.Init%
+	set DeleteSpaces.Str.Value=%DeleteSpaces.Str.Value:     =%
+	set DeleteSpaces.Str.Value=%DeleteSpaces.Str.Value:    =%
+	set DeleteSpaces.Str.Value=%DeleteSpaces.Str.Value:   =%
+	set DeleteSpaces.Str.Value=%DeleteSpaces.Str.Value:  =%
+	set DeleteSpaces.Str.Value=%DeleteSpaces.Str.Value: =%
 	set %1=%DeleteSpaces.Str.Value%
 	if not "%DeleteSpaces.Str.Value.Init%"=="%DeleteSpaces.Str.Value%" goto DeleteSpaces %1
 exit /b
@@ -150,16 +149,16 @@ exit /b
 :deleteDigits
 	call set DeleteDigits.Str.Value.Init=%%%1%%
 	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value.Init%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:0=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:1=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:2=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:3=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:4=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:5=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:6=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:7=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:8=%%
-	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:9=%%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:0=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:1=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:2=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:3=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:4=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:5=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:6=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:7=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:8=%
+	set DeleteDigits.Str.Value=%DeleteDigits.Str.Value:9=%
 	set %1=%DeleteDigits.Str.Value%
 	if not "%DeleteDigits.Str.Value.Init%"=="%DeleteDigits.Str.Value%" goto DeleteDigits %1
 exit /b
@@ -167,10 +166,11 @@ exit /b
 :: Args: %1 - variableName
 :deleteDoubleSpaces
 	call set deleteDoubleSpaces.Str.Value.Init=%%%1%%
-	call set deleteDoubleSpaces.Str.Value=%%%1:     = %%
-	call set deleteDoubleSpaces.Str.Value=%%%1:    = %%
-	call set deleteDoubleSpaces.Str.Value=%%%1:   = %%
-	call set deleteDoubleSpaces.Str.Value=%%%1:  = %%
+	set deleteDoubleSpaces.Str.Value=%deleteDoubleSpaces.Str.Value.Init%
+	set deleteDoubleSpaces.Str.Value=%deleteDoubleSpaces.Str.Value.Init:     = %
+	set deleteDoubleSpaces.Str.Value=%deleteDoubleSpaces.Str.Value.Init:    = %
+	set deleteDoubleSpaces.Str.Value=%deleteDoubleSpaces.Str.Value.Init:   = %
+	set deleteDoubleSpaces.Str.Value=%deleteDoubleSpaces.Str.Value.Init:  = %
 	set %1=%deleteDoubleSpaces.Str.Value%
 	if not "%deleteDoubleSpaces.Str.Value.Init%"=="%deleteDoubleSpaces.Str.Value%" goto deleteDoubleSpaces %1
 exit /b
